@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="stylesheet" href="styles.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pizzeria</title>
+</head>
+
+<body>
+    <!-- ===== Main Menu ===== -->
+    <div class="ui" id="mainMenu">
+        <h1>Outback Cafe</h1>
+        <button class="levelSelect">Select Level</button>
+        <button id="endlessMode">Endless Mode</button>
+    </div>
+
+    <!-- ===== Level Selection Menu ===== -->
+    <div class="ui" id="levelMenu" style="display:none;">
+        <h2>Select Level</h2>
+        <button class="levelButton" data-level="Level">Level 1</button>
+        <button class="levelButton" data-level="Level2">Level 2</button>
+        <button class="levelButton" data-level="Level3">Level 3</button>
+        <button class="levelButton" data-level="Level4">Level 4</button>
+        <button class="levelButton" data-level="Level5">Level 5</button>
+        <button class="backToMain">Back to Main Menu</button>
+    </div>
+
+    <!-- ===== Cafe Menu Overlay ===== -->
+    <div class="ui" id="cafeMenu" style="display:none;">
+        <div id="menuList"></div>
+    </div>
+
+    <!-- ===== Score / Timer HUD ===== -->
+    <div class="ui" id="hud">
+        <span id="scoreDisplay">Points: 0</span>
+        <span id="timer">Time Left: 60s</span>
+    </div>
+
+    <!-- ===== Level Complete Menu ===== -->
+    <div class="ui" id="levelComplete" style="display:none;">
+        <button id="nextLevelBtn">Next Level</button>
+        <button id="restartLevelBtn">Restart Level</button>
+        <button class="levelSelect">Select Level</button>
+        <button class="backToMain">Back to Main Menu</button>
+    </div>
+
+    <!-- ===== Main Game Area ===== -->
+    <div id="levelZone">
+        <div id="customerZone">
+            <div class="customer-spot" id="customerSpot0"></div>
+            <div class="customer-spot" id="customerSpot1"></div>
+            <div class="customer-spot" id="customerSpot2"></div>
+        </div>
+        <div id="player"></div>
+        <div class="player-walking-spot" id="spot1"></div>
+        <div class="player-walking-spot" id="spot2"></div>
+        <div class="player-walking-spot" id="spot3"></div>
+        <div class="player-walking-spot" id="spot4"></div>
+        <div class="player-walking-spot" id="spot5"></div>
+        <div class="player-walking-spot" id="spot6"></div>
+        <div class="player-walking-spot" id="spot7"></div>
+        <div class="player-walking-spot" id="spot8"></div>
+        <div class="player-walking-spot" id="spot9"></div>
+        <div class="player-walking-spot" id="spot10"></div>
+        <div class="player-walking-spot" id="spot11"></div>
+        <!-- Kitchen bench area with plates -->
+        <div id="kitchenBenchZone">
+            <div class="plate" id="plate1"></div>
+            <div class="plate" id="plate2"></div>
+            <div class="plate" id="plate3"></div>
+        </div>
+
+        <!-- Left ingredient table -->
+        <div id="leftIngredientZone">
+            <img class="ingredient" id="ingredient1" src="Assets/Food Art/EucalyptusLeafPNG128.png">
+            <img class="ingredient" id="ingredient2" src="Assets/Food Art/GrassPNG128.png">
+            <img class="ingredient" id="ingredient3" src="Assets/Food Art/Temp Food 3.PNG">
+            <img class="ingredient" id="ingredient4" src="Assets/Food Art/Temp Food 4.PNG">
+        </div>
+
+        <!-- Right ingredient table -->
+        <div id="rightIngredientZone">
+            <img class="ingredient" id="ingredient5" src="Assets/Food Art/Temp Food 5.PNG">
+            <img class="ingredient" id="ingredient6" src="Assets/Food Art/Temp Food 6.PNG">
+            <img class="ingredient" id="ingredient7" src="Assets/Food Art/Temp Food 7.PNG">
+            <img class="ingredient" id="ingredientCup" src="Assets/Food Art/cup.png">
+            <img id="ingredientCupFilled" style="display:none;" src="Assets/Food Art/cupOfWater.png">
+        </div>
+        <div id="chopper">
+            <div class="player-walking-spot" id="spot14"></div>
+        </div>
+        <div id="bin">
+            <div class="player-walking-spot" id="spot13"></div>
+        </div>
+        <div id="waterCooler">
+            <div class="player-walking-spot" id="spot12"></div>
+        </div>
+    </div>
+    <script src="GameManager.js"></script>
+</body>
+
+</html>

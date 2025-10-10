@@ -1,0 +1,424 @@
+body {
+    margin: 0;
+    padding: 0;
+}
+
+#cafeMenu {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(255, 255, 255, 0.8);
+    border: 2px solid #000;
+    border-radius: 10px;
+    padding: 1%;
+    box-sizing: border-box;
+    overflow-y: auto;
+    z-index: 99;
+}
+
+.menu-entry {
+    display: flex;
+    align-items: center;
+}
+
+.menu-animal {
+    width: 4vw;
+    height: 4vw;
+    margin-right: 1vw;
+}
+
+.menu-ingredient {
+    width: 4vw;
+    height: 4vw;
+    position: relative;
+    top: 0%;
+    margin-left: 1vw;
+}
+
+#hud {
+    width: 20%;
+    height: 10%;
+    position: absolute;
+    top: 1%;
+    left: 1%;
+    background-color: rgba(255, 255, 255, 0.8);
+    border: 2px solid #000;
+    border-radius: 10px;
+    padding: 1%;
+    box-sizing: border-box;
+    z-index: 2;
+    display: none;
+}
+
+#customerZone {
+    width: 52%;
+    height: 15%;
+    position: absolute;
+    top: 1%;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    justify-content: space-around;
+}
+
+.customer-spot {
+    position: absolute;
+    top: 10%;
+}
+
+/* Customer spots */
+#customerSpot0 {
+    left: 9%;
+}
+
+#customerSpot1 {
+    left: 42%;
+}
+
+#customerSpot2 {
+    left: 76%;
+}
+
+/* Restaurant background */
+#levelZone {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+    background-image: url('Assets/Background Art/backgroundPNG.png');
+    background-size: 100% 100%;
+    background-position: center;
+    background-repeat: no-repeat;
+    overflow: hidden;
+}
+
+/* Kitchen area, where plates will be placed */
+#kitchenBenchZone {
+    position: absolute;
+    top: 17%;          /* move down from top */
+    left: 50%;         /* center horizontally */
+    transform: translateX(-50%);
+    width: 52%;        /* roughly the length of the top table */
+    height: 15%;       /* height of the top table */
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+
+#player {
+    background-image: url('Assets/Player Art/Temp Player.PNG');
+    width: 6vw;
+    height: 6vw;
+    top: 50%;
+    left: 50%;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    position: absolute;
+    z-index: 2;
+    transition: left 0.4s ease, top 0.4s ease;
+}
+
+#player .held {
+  position: absolute;
+  width: 2.5vw;
+  height: 2.5vw;
+  bottom: 0;     /* show at bottom-right corner */
+  right: 0;
+  pointer-events: none;
+}
+
+.player-walking-spot {
+    position: absolute;
+}
+
+/* === Spots next to Plates (top table) === */
+#spot1 {   /* plate1 */
+  top: 36%;       /* slightly below plate height */
+  left: 30%;      /* directly under plate1 */
+}
+#spot2 {   /* plate2 */
+  top: 36%;
+  left: 47%;
+}
+#spot3 {   /* plate3 */
+  top: 36%;
+  left: 64.5%;
+}
+
+/* === Spots next to Left Table Ingredients === */
+#spot4 {   /* ingredient1 */
+  top: 39%; 
+  left: 24%;
+}
+#spot5 {   /* ingredient2 */
+  top: 55%;
+  left: 24%;
+}
+#spot6 {   /* ingredient3 */
+  top: 70.5%;
+  left: 24%;
+}
+#spot7 {   /* ingredient4 */
+  top: 86%;
+  left: 24%;
+}
+
+/* === Spots next to Right Table Ingredients === */
+#spot8 {   /* ingredient5 */
+  top: 39%;
+  right: 30%;
+}
+#spot9 {   /* ingredient6 */
+  top: 55%;
+  right: 30%;
+}
+#spot10 {  /* ingredient7 */
+  top: 70.5%;
+  right: 30%;
+}
+
+/* === Spot next to Cup Dispenser === */
+#spot11 {  /* ingredientCup */
+  top: 86%;
+  right: 30%;   /* adjust to wherever cup dispenser graphic is */
+}
+
+/* water dispenser */
+#spot12 {
+    top: -80%;
+    left: 13%;
+}
+
+/* bin */
+#spot13 {
+    top: -80%;
+    left: 13%;
+}
+
+/* chopper */
+#spot14 {
+    top: -80%;
+    left: 13%;
+}
+
+.plate {
+    display: flex;
+    width: 8vw;
+    height: 8vw;
+    top: 20%;
+    background-image: url('Assets/Food Art/PlateSpritePNG64.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    align-items: center;
+}
+
+.plate .dropped {
+    width: 2.5vw;
+    height: 2.5vw;
+    position: relative;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+#plate1 {
+    left: 0%;
+}
+
+#plate2 {
+    left: 44%
+}
+
+#plate3 {
+    right: 0%
+}
+
+/* Left kitchen table for ingredients */
+#leftIngredientZone {
+    position: absolute;
+    top: 35%;     /* aligns with drawn left table */
+    left: 9%;     /* aligns flush with left table */
+    width: 15%;   /* width of left table */
+    height: 62%;  /* height of left table */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+}
+
+/* Right kitchen table for ingredients */
+#rightIngredientZone {
+    position: absolute;
+    top: 35%;     /* aligns with drawn right table */
+    right: 9%;    /* aligns flush with right table */
+    width: 15%;   /* width of right table */
+    height: 62%;  /* height of right table */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+}
+
+/* Individual ingredient styling */
+.ingredient {
+    width: 5vw;
+    height: 5vw;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+/* Specific ingredient backgrounds */
+#leftIngredientZone #ingredient1 {
+    top: 10%;
+}
+
+#leftIngredientZone #ingredient2 {
+    top: 30%;
+}
+
+#leftIngredientZone #ingredient3 {
+    top: 50%;
+}
+
+#leftIngredientZone #ingredient4 {
+    top: 70%;
+}
+
+#rightIngredientZone #ingredient5 {
+    top: 10%;
+}
+
+#rightIngredientZone #ingredient6 {
+    top: 30%;
+}
+
+#rightIngredientZone #ingredient7 {
+    top: 50%;
+}
+
+#rightIngredientZone #ingredientCup {
+    top: 70%;
+}
+
+#waterCooler {
+    width: 8vw;
+    height: 8vw;
+    background-image: url('Assets/Food Art/water.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    position: absolute;
+    bottom: 0%;
+    right: 35%;
+}
+
+#waterCooler .dropped {
+    width: 2.5vw;
+    height: 2.5vw;
+    top: 75%;
+    left: 50%;
+    transform: translateX(-50%);
+    position: relative;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+#chopper {
+    width: 8vw;
+    height: 8vw;
+    background-image: url('Assets/Food Art/water.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    position: absolute;
+    bottom: 0%;
+    left: 35%;
+}
+
+#chopper .dropped {
+    width: 2.5vw;
+    height: 2.5vw;
+    top: 25%;
+    left: 50%;
+    transform: translateX(-50%);
+    position: relative;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+#bin {
+    width: 8vw;
+    height: 8vw;
+    background-image: url('Assets/Food Art/TrashCan64.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    position: absolute;
+    bottom: 0%;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* Customer styling */
+.customer {
+    width: 8vw;
+    height: 8vw;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    position: absolute;
+    top: 20%;
+}
+
+/* container inside each animal */
+.patience-meter {
+  position: absolute;
+  top: -12px;          /* Float just above the animal */
+  left: 0%;
+  width: 100%;         /* Full width of the bar */
+  height: 1vh;
+  transform-origin: left center; /* Important for scaling from the left */
+  background-image: url("Assets/Customer Art/FullPatienceMeterPNG64-32.png");
+  background-size: cover;
+  background-repeat: no-repeat;
+  overflow: hidden;
+  
+  clip-path: inset(0 0 0 0); /* Rounded corners */
+}
+
+.reaction-icon {
+    width: 1vw;
+    height: 1vw;
+    position: absolute;
+    top: 5%;
+    right: 0%;
+    rotate: 15deg;
+    z-index: 2;
+}
+
+.koala {
+    background-image: url('Assets/Animals Art/koala.png');
+}
+
+.kangaroo {
+    background-image: url('Assets/Animals Art/kangaroo.png');
+}
+
+.wombat {
+    background-image: url('Assets/Animals Art/wombat.png');
+}
+
+.snake {
+    background-image: url('Assets/Animals Art/snake.png');
+}
+
+.possum {
+    background-image: url('Assets/Animals Art/possum.png');
+}
