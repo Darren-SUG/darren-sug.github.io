@@ -106,6 +106,7 @@ class Player {
             clone.classList.add("held");
             this.element.appendChild(clone);
             this.heldItem = clone;
+            new Audio("Assets/SFX/PickUpItem.mp3").play();
             return;
           }
         }
@@ -140,6 +141,7 @@ class Player {
     // ---- drop held item ----
     if (this.heldItem) {
       this.drop();
+      new Audio("Assets/SFX/ItemDropping.mp3").play();
     }
   }
 
@@ -284,6 +286,7 @@ class Animal {
 
   leaveAngry() {
     clearInterval(this.timer);
+    new Audio("Assets/SFX/AnimalAngry.mp3").play();
     const img = document.createElement("img");
     img.src = "Assets/Customer Art/angry.png";
     img.className = "reaction-icon";
@@ -307,6 +310,7 @@ class Animal {
       updateScore();
       clearInterval(this.timer);
       
+      new Audio("Assets/SFX/AnimalHappy.mp3").play();
       const img = document.createElement("img");
       img.src = "Assets/Customer Art/happy.png";
       img.className = "reaction-icon";
@@ -550,7 +554,7 @@ function startLevel(levelData) {
       const animal = new Animal(randomCustomer.name, randomCustomer.meal, randomCustomer.ticker);
       customers.push(animal);
       
-      new Audio("Assets/Sounds/bell.mp3").play();
+      new Audio("Assets/SFX/Ding.mp3").play();
     }
 
     // Schedule the next spawn after a random delay
