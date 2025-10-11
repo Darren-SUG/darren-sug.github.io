@@ -600,6 +600,7 @@ const animalMealPool = [
 
 document.querySelectorAll(".levelSelect").forEach(btn => {
   btn.onclick = () => {
+    document.getElementById("bgm").play();
     document.querySelectorAll(".ui").forEach(el => {
       el.style.display = "none";
     });
@@ -628,6 +629,7 @@ document.querySelectorAll(".levelButton").forEach((button, index) => {
 });
 
 document.getElementById("endlessMode").onclick = () => {
+  document.getElementById("bgm").play();
   document.querySelectorAll(".ui").forEach(el => el.style.display = "none");
   document.getElementById("endlessMode").classList.add("active");
 
