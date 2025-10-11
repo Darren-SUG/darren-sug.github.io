@@ -5,7 +5,7 @@
     <link rel="stylesheet" href="styles.css" />
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pizzeria</title>
+    <title>Outback Cafe</title>
 </head>
 
 <body>
@@ -19,11 +19,11 @@
     <!-- ===== Level Selection Menu ===== -->
     <div class="ui" id="levelMenu" style="display:none;">
         <h2>Select Level</h2>
-        <button class="levelButton" data-level="Level">Level 1</button>
-        <button class="levelButton" data-level="Level2">Level 2</button>
-        <button class="levelButton" data-level="Level3">Level 3</button>
-        <button class="levelButton" data-level="Level4">Level 4</button>
-        <button class="levelButton" data-level="Level5">Level 5</button>
+        <button class="levelButton" id="level1" data-level="level1">Level 1</button>
+        <button class="levelButton" id="level2" data-level="level2">Level 2</button>
+        <button class="levelButton" id="level3" data-level="level3">Level 3</button>
+        <button class="levelButton" id="level4" data-level="level4">Level 4</button>
+        <button class="levelButton" id="level5" data-level="level5">Level 5</button>
         <button class="backToMain">Back to Main Menu</button>
     </div>
 
@@ -40,8 +40,10 @@
 
     <!-- ===== Level Complete Menu ===== -->
     <div class="ui" id="levelComplete" style="display:none;">
-        <button id="nextLevelBtn">Next Level</button>
-        <button id="restartLevelBtn">Restart Level</button>
+        <h2 id="levelCompleteText"></h2>
+        <p id="finalScore"></p>
+        <button id="nextLevelBtn">Next</button>
+        <button id="restartLevelBtn">Restart</button>
         <button class="levelSelect">Select Level</button>
         <button class="backToMain">Back to Main Menu</button>
     </div>

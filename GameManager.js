@@ -358,12 +358,10 @@ function endLevel() {
   document.getElementById("hud").style.display = "none";
   levelActive = false;
   const menu = document.getElementById("levelComplete");
-  const heading = document.createElement("h2");
-  const score = document.createElement("p");
+  const heading = document.getElementById("levelCompleteText");
+  const score = document.getElementById("finalScore");
   score.textContent = `Final Score: ${currentScore}`;
-  menu.appendChild(score);
-  heading.textContent = currentScore >= requiredPoints ? "Level Complete!" : "Time's Up!";
-  menu.appendChild(heading);
+  heading.textContent = currentScore >= requiredPoints ? "Completed!" : "Time's Up!";
   menu.style.display = "block";
 
   let nextLevel = null;
@@ -402,29 +400,52 @@ function endLevel() {
   Object.keys(plateAssignments).forEach(p => {
     plateAssignments[p] = null;
   });
-  if (currentScore >= requiredPoints || levelTimer <= 0) {
-    document.getElementById("levelComplete").style.display = "block";
+
+  // 🧩 Endless Mode Handling
+  if (document.getElementById("endlessMode").classList.contains("active")) {
+    if (currentScore >= requiredPoints) {
+      // Player passed this wave
+      requiredPoints += 300; // raise goal
+      showCafeMenu(generateEndlessLevel()); // show next random wave menu
+    } else {
+      // Player failed the wave – normal fail screen
+      document.getElementById("levelComplete").style.display = "block";
+      document.getElementById("nextLevelBtn").style.display = "none"; // hide next button
+      document.querySelectorAll(".levelSelect")[1].style.display = "none"; // hide level select button
+    }
+    return; // prevent normal levelComplete logic from firing again
+  } else {
+    if (currentScore >= requiredPoints) {
+      const currentLevelIndex = levels.indexOf(currentLevel);
+      const currentLevelName = levelNames[currentLevelIndex];
+      document.getElementById(currentLevelName).classList.add("completed");
+    }
+    
+    // Normal mode handling (for story levels)
+    if (currentScore >= requiredPoints || levelTimer <= 0) {
+      document.getElementById("levelComplete").style.display = "block";
+    }
   }
 }
 
 /****************************************************
  * Level / Menu
  ****************************************************/
-const Level1 = {
+const level1 = {
   customers: [
     { name: "Koala", meal: ["ingredient1"], ticker: 20},
     { name: "Kangaroo", meal: ["ingredient2"], ticker: 20},
   ]
 };
 
-const Level2 = {
+const level2 = {
   customers: [
     { name: "Koala", meal: ["ingredient1"], ticker: 15},
     { name: "Kangaroo", meal: ["ingredient2", "ingredientCupFilled"], ticker: 15}
   ]
 };
 
-const Level3 = {
+const level3 = {
   customers: [
     { name: "Koala", meal: ["ingredient1"], ticker: 15},
     { name: "Wombat", meal: ["ingredient1", "ingredient2"], ticker: 15},
@@ -432,7 +453,7 @@ const Level3 = {
   ]
 };
 
-const Level4 = {
+const level4 = {
   customers: [
     { name: "Koala", meal: ["ingredient1"], ticker: 15},
     { name: "Wombat", meal: ["ingredient1", "ingredient2", "ingredientCupFilled"], ticker: 15},
@@ -440,7 +461,7 @@ const Level4 = {
   ]
 };
 
-const Level5 = {
+const level5 = {
   customers: [
     { name: "Possum", meal: ["ingredient1", "ingredient2", "ingredient4Chopped"], ticker: 15},
     { name: "Wombat", meal: ["ingredient1", "ingredient2", "ingredientCupFilled"], ticker: 15},
@@ -448,7 +469,8 @@ const Level5 = {
   ]
 };
 
-const levels = [Level1, Level2, Level3, Level4, Level5];
+const levels = [level1, level2, level3, level4, level5];
+const levelNames = ["level1", "level2", "level3", "level4", "level5"];
 
 function showCafeMenu(levelData) {
   document.getElementById("levelComplete").style.display = "none";
@@ -481,7 +503,7 @@ function showCafeMenu(levelData) {
   });
 
   const startBtn = document.createElement("button");
-  startBtn.textContent = "Start Level";
+  startBtn.textContent = "Start";
   startBtn.onclick = () => startLevel(levelData);
   menu.appendChild(startBtn);
 
@@ -492,7 +514,11 @@ function startLevel(levelData) {
   document.getElementById("cafeMenu").style.display = "none";
   document.getElementById("hud").style.display = "block";
   currentLevel = levelData;
-  currentScore = 0;
+  if (!document.getElementById("endlessMode").classList.contains("active")) {
+    currentScore = 0;
+  } else {
+    currentScore = currentScore; // preserve previous total if continuing
+  }
   levelTimer = LEVEL_TIME;
 
   updateScore();
@@ -536,22 +562,37 @@ function startLevel(levelData) {
   spawnCustomer();
 }
 
-/****************************************************
- * Endless mode example
- ****************************************************/
-const mealPool = {
-  Koala: [["ingredient1","ingredient3"],["ingredient2"],["ingredient1"]],
-  Kangaroo: [["ingredient4"],["ingredient5","ingredient6"]]
-};
-function randomFrom(arr){return arr[Math.floor(Math.random()*arr.length)];}
-function randomLevel(){
-  return {
-    customers: [
-      { name: "Koala", meal: randomFrom(mealPool.Koala), spawnDelay: 2 },
-      { name: "Kangaroo", meal: randomFrom(mealPool.Kangaroo), spawnDelay: 8 }
-    ]
-  };
+function startEndlessRound() {
+  const endlessLevel = generateEndlessLevel();
+  showCafeMenu(endlessLevel); // reuse your cafeMenu function
+  currentLevel = endlessLevel;
 }
+
+function generateEndlessLevel() {
+  const levelData = { customers: [] };
+
+  // Choose 3 unique animals from the pool
+  const shuffled = [...animalMealPool].sort(() => 0.5 - Math.random());
+  const selected = shuffled.slice(0, 3);
+
+  selected.forEach(animalData => {
+    levelData.customers.push({
+      name: animalData.name,
+      meal: animalData.meal,
+      ticker: 15
+    });
+  });
+
+  return levelData;
+}
+
+const animalMealPool = [
+  { name: "Koala",   meal: ["ingredient1"] },
+  { name: "Kangaroo", meal: ["ingredient2", "ingredientCupFilled"] },
+  { name: "Wombat",  meal: ["ingredient1", "ingredient2", "ingredientCupFilled"] },
+  { name: "Snake",   meal: ["ingredient3", "ingredientCupFilled"] },
+  { name: "Possum",  meal: ["ingredient1", "ingredient2", "ingredient4"] }
+];
 
 document.querySelectorAll(".levelSelect").forEach(btn => {
   btn.onclick = () => {
@@ -573,6 +614,7 @@ document.querySelectorAll(".backToMain").forEach(btn => {
 
 document.querySelectorAll(".levelButton").forEach((button, index) => {
   button.addEventListener("click", () => {
+    document.getElementById("endlessMode").classList.remove("active");
     const levelData = levels[index];
     document.querySelectorAll(".ui").forEach(el => {
       el.style.display = "none";
@@ -580,3 +622,16 @@ document.querySelectorAll(".levelButton").forEach((button, index) => {
     showCafeMenu(levelData);
   });
 });
+
+document.getElementById("endlessMode").onclick = () => {
+  document.querySelectorAll(".ui").forEach(el => el.style.display = "none");
+  document.getElementById("endlessMode").classList.add("active");
+
+  requiredPoints = 300; // First threshold for wave completion
+  if (!levelActive) {
+    currentScore = currentScore; // preserve previous total if continuing
+  }
+
+  startEndlessRound();
+};
+
