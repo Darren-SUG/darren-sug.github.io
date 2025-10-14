@@ -3,6 +3,26 @@ body {
     padding: 0;
 }
 
+#settingsMenu {
+    width: 20%;
+    height: 30%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(255, 255, 255, 0.9);
+    border: 2px solid #000;
+    border-radius: 10px;
+    padding: 1%;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-around;
+    z-index: 100;
+    display: none;
+}
+
 #cafeMenu {
     width: 100%;
     height: 100%;
@@ -84,7 +104,7 @@ body {
 
 /* Restaurant background */
 #levelZone {
-    width: 100vw;
+    width: 99.3vw;
     height: 100vh;
     position: relative;
     background-image: url('Assets/Background Art/backgroundPNG.png');
@@ -150,40 +170,28 @@ body {
 
 /* === Spots next to Left Table Ingredients === */
 #spot4 {   /* ingredient1 */
-  top: 39%; 
+  top: 41%; 
   left: 24%;
 }
 #spot5 {   /* ingredient2 */
-  top: 55%;
+  top: 62%;
   left: 24%;
 }
 #spot6 {   /* ingredient3 */
-  top: 70.5%;
-  left: 24%;
-}
-#spot7 {   /* ingredient4 */
-  top: 86%;
+  top: 83%;
   left: 24%;
 }
 
 /* === Spots next to Right Table Ingredients === */
-#spot8 {   /* ingredient5 */
-  top: 39%;
-  right: 30%;
-}
-#spot9 {   /* ingredient6 */
-  top: 55%;
-  right: 30%;
-}
-#spot10 {  /* ingredient7 */
-  top: 70.5%;
+#spot7 {   /* ingredient4 */
+  top: 47%;
   right: 30%;
 }
 
 /* === Spot next to Cup Dispenser === */
 #spot11 {  /* ingredientCup */
-  top: 86%;
-  right: 30%;   /* adjust to wherever cup dispenser graphic is */
+  top: 78%;
+  right: 30%;
 }
 
 /* water dispenser */
@@ -270,39 +278,6 @@ body {
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-}
-
-/* Specific ingredient backgrounds */
-#leftIngredientZone #ingredient1 {
-    top: 10%;
-}
-
-#leftIngredientZone #ingredient2 {
-    top: 30%;
-}
-
-#leftIngredientZone #ingredient3 {
-    top: 50%;
-}
-
-#leftIngredientZone #ingredient4 {
-    top: 70%;
-}
-
-#rightIngredientZone #ingredient5 {
-    top: 10%;
-}
-
-#rightIngredientZone #ingredient6 {
-    top: 30%;
-}
-
-#rightIngredientZone #ingredient7 {
-    top: 50%;
-}
-
-#rightIngredientZone #ingredientCup {
-    top: 70%;
 }
 
 #waterCooler {

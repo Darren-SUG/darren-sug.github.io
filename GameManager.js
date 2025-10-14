@@ -1,5 +1,5 @@
 /****************************************************
- * OUTBACK CAFE – Single JS File (with new plate system)
+ * OUTBACK CAFE – Single JS File (with new plate system + mute toggle)
  ****************************************************/
 
 // ===== Global Config =====
@@ -12,6 +12,7 @@ let requiredPoints = 300;
 let customers    = [];         // active Animal instances
 let gameInterval = null;
 let levelActive = false;
+let colourBlindMode = false;
 
 // Track which plates have items (arrays allow up to 3 ingredients)
 const plateContents = {
@@ -50,7 +51,7 @@ const plateAssignments = {
 class Player {
   constructor(elementId) {
     this.element = document.getElementById(elementId);
-    this.heldItem = null;       // clone of ingredient or cup
+    this.heldItem = null;
     this.currentSpotId = null;
     this.dispenserBusy = false;
     this.chopperBusy = false;
@@ -61,7 +62,6 @@ class Player {
     if (!spot) return;
 
     const levelZone = document.getElementById("levelZone");
-
     const spotRect = spot.getBoundingClientRect();
     const levelRect = levelZone.getBoundingClientRect();
 
@@ -79,18 +79,16 @@ class Player {
     if (!this.currentSpotId) return;
 
     // ---- clear all ingredients ----
-    if (this.currentSpotId === "spot13") { // bin code
+    if (this.currentSpotId === "spot13") {
       if (this.heldItem) {
         this.heldItem.remove();
         this.heldItem = null;
       }
       Object.keys(plateContents).forEach(plateId => {
-        // dont clear water cooler
         if (plateId !== "waterCooler" && plateId !== "chopper") {
           plateContents[plateId] = [];
           const plateEl = document.getElementById(plateId);
           if (plateEl) plateEl.innerHTML = "";
-          // dont clear plate assignments, this changes the customers wants, making it impossible to serve them
         }
       });
       return;
@@ -106,11 +104,12 @@ class Player {
             clone.classList.add("held");
             this.element.appendChild(clone);
             this.heldItem = clone;
-            new Audio("Assets/SFX/PickUpItem.mp3").play();
+            playSound("Assets/SFX/PickUpItem.mp3");
             return;
           }
         }
       }
+
       // ---- pick up filled cup from water cooler ----
       if (this.currentSpotId === elementToSpotMap["waterCooler"] && 
           !this.dispenserBusy && 
@@ -122,6 +121,7 @@ class Player {
         this.heldItem = clone;
         cupEl.remove();
         plateContents["waterCooler"] = [];
+        playSound("Assets/SFX/PickUpItem.mp3");
       }
 
       // ---- pick up chopped ingredient from chopper ----
@@ -135,38 +135,35 @@ class Player {
         this.heldItem = clone;
         ingEl.remove();
         plateContents["chopper"] = [];
+        playSound("Assets/SFX/PickUpItem.mp3");
       }
     }
 
     // ---- drop held item ----
     if (this.heldItem) {
       this.drop();
-      new Audio("Assets/SFX/ItemDropping.mp3").play();
     }
   }
 
   drop() {
     if (!this.heldItem || !this.currentSpotId) return false;
 
-    // ---- Check water cooler first ----
+    // ---- Water Cooler ----
     const coolerSpot = Object.entries(elementToSpotMap)
       .find(([id, s]) => s === this.currentSpotId && id === "waterCooler");
 
     if (coolerSpot) {
       if (this.heldItem.id === "ingredientCup" && !this.dispenserBusy && plateContents["waterCooler"].length < 1) {
-        // if cooler does not have a cup, fill cup
         this.dispenserBusy = true;
         const dispenserEl = document.getElementById("waterCooler");
-        
-        // move cup to cooler
         dispenserEl.appendChild(this.heldItem);
         this.heldItem.classList.remove("held");
         this.heldItem.classList.add("dropped");
         plateContents["waterCooler"].push(this.heldItem);
+        playSound("Assets/SFX/ItemDropping.mp3");
+        playSound("Assets/SFX/WaterCooler.mp3");
         this.heldItem = null;
-        new Audio("Assets/SFX/WaterCooler.mp3").play();
-        
-        // fill cup after X time
+
         setTimeout(() => {
           const cupEl = plateContents["waterCooler"][0];
           if (cupEl) {
@@ -174,32 +171,28 @@ class Player {
             cupEl.src = "Assets/Food Art/cupOfWater.png";
           }
           this.dispenserBusy = false;
-        }, 4000); // edit this number to change filling time
-        
+        }, 4000);
         return true;
       }
-      // if holding filled cup, or dispenser is busy, or hand is empty, don't do anything
       return false;
     }
 
+    // ---- Chopper ----
     const chopperSpot = Object.entries(elementToSpotMap)
       .find(([id, s]) => s === this.currentSpotId && id === "chopper");
 
     if (chopperSpot) {
-      if (this.heldItem.id !== "ingredientCup" && !this.chopperBusy && plateContents["chopper"].length < 1) {
-        // if chopper does not have an ingredient, chop ingredient
+      if (this.heldItem.id !== "ingredientCup" && !this.heldItem.id.includes("Chopped") && !this.chopperBusy && plateContents["chopper"].length < 1) {
         this.chopperBusy = true;
         const chopperEl = document.getElementById("chopper");
-        
-        // move ingredient to chopper
         chopperEl.appendChild(this.heldItem);
         this.heldItem.classList.remove("held");
         this.heldItem.classList.add("dropped");
         plateContents["chopper"].push(this.heldItem);
+        playSound("Assets/SFX/ItemDropping.mp3");
+        playSound("Assets/SFX/KitchenHand.mp3");
         this.heldItem = null;
-        new Audio("Assets/SFX/KitchenHand.mp3").play();
-        
-        // chop ingredient after X time
+
         setTimeout(() => {
           const ingEl = plateContents["chopper"][0];
           if (ingEl) {
@@ -207,40 +200,30 @@ class Player {
             ingEl.src = `Assets/Food Art/${ingEl.id}.png`;
           }
           this.chopperBusy = false;
-        }, 4000); // edit this number to change chopping time
-        
+        }, 4000);
         return true;
       }
-      // if holding chopped ingredient, or chopper is busy, or hand is empty, don't do anything
       return false;
     }
 
-    // ---- Check plates ----
+    // ---- Plates ----
     const plateId = Object.entries(elementToSpotMap)
-      .find(([elId, spot]) =>
-        spot === this.currentSpotId &&
-        elId.startsWith("plate")
-      )?.[0];
+      .find(([elId, spot]) => spot === this.currentSpotId && elId.startsWith("plate"))?.[0];
 
     if (plateId) {
-      if (!Array.isArray(plateContents[plateId])) {
-        plateContents[plateId] = [];
-      }
+      if (!Array.isArray(plateContents[plateId])) plateContents[plateId] = [];
 
       if (plateContents[plateId].length < 3) {
         const plateEl = document.getElementById(plateId);
         plateEl.appendChild(this.heldItem);
-
         this.heldItem.classList.remove("held");
         this.heldItem.classList.add("dropped");
-
         plateContents[plateId].push(this.heldItem.id);
+        playSound("Assets/SFX/ItemDropping.mp3");
         this.heldItem = null;
 
-        // Check if this plate is linked to a customer
         const customer = plateAssignments[plateId];
         if (customer) customer.serve(plateContents[plateId]);
-
         return true;
       }
     }
@@ -259,12 +242,8 @@ class Animal {
     this.patience = 1;
     this.patienceTicker = patienceTicker;
 
-    // Find a free plate slot for this animal
     this.plateId = Object.keys(plateAssignments).find(p => plateAssignments[p] === null);
-    if (!this.plateId) {
-      console.warn("No free plates for", name);
-      return;
-    }
+    if (!this.plateId) return;
     plateAssignments[this.plateId] = this;
 
     this.element = document.createElement("div");
@@ -276,7 +255,9 @@ class Animal {
     this.meter = document.createElement("div");
     this.meter.className = "patience-meter";
     this.element.appendChild(this.meter);
-
+    if (colourBlindMode) {
+      this.element.style.backgroundImage = `url('Assets/Animals Art/${this.name.toLowerCase()}_cb.png')`; 
+    }
     this.timer = setInterval(() => this.tick(), 1000);
   }
 
@@ -288,7 +269,7 @@ class Animal {
 
   leaveAngry() {
     clearInterval(this.timer);
-    new Audio("Assets/SFX/AnimalAngry.mp3").play();
+    playSound("Assets/SFX/AnimalAngry.mp3");
     const img = document.createElement("img");
     img.src = "Assets/Customer Art/angry.png";
     img.className = "reaction-icon";
@@ -304,15 +285,14 @@ class Animal {
       clearInterval(this.timer);
       this.leaveAngry();
     }
-    if (this.correctFood.every(f => ingredients.includes(f)) &&
-        ingredients.length === this.correctFood.length) {
+    if (this.correctFood.every(f => ingredients.includes(f)) && ingredients.length === this.correctFood.length) {
       customers = customers.filter(c => c !== this);
       const pts = Math.round(POINTS_PER_MEAL * this.patience);
       currentScore += pts;
       updateScore();
       clearInterval(this.timer);
-      
-      new Audio("Assets/SFX/AnimalHappy.mp3").play();
+      playSound("Assets/SFX/AnimalHappy.mp3");
+
       const img = document.createElement("img");
       img.src = "Assets/Customer Art/happy.png";
       img.className = "reaction-icon";
@@ -492,7 +472,11 @@ function showCafeMenu(levelData) {
       const div = document.createElement("div");
       div.className = "menu-entry";
       const animalImg = document.createElement("img");
-      animalImg.src = `Assets/Animals Art/${c.name.toLowerCase()}.png`;
+      if (colourBlindMode) {
+        animalImg.src = `Assets/Animals Art/${c.name.toLowerCase()}_cb.png`;
+      } else {
+        animalImg.src = `Assets/Animals Art/${c.name.toLowerCase()}.png`;
+      }
       animalImg.className = "menu-animal";
       div.appendChild(animalImg);
       c.meal.forEach(i => {
@@ -556,7 +540,7 @@ function startLevel(levelData) {
       const animal = new Animal(randomCustomer.name, randomCustomer.meal, randomCustomer.ticker);
       customers.push(animal);
       
-      new Audio("Assets/SFX/Ding.mp3").play();
+      playSound("Assets/SFX/Ding.mp3");
     }
 
     // Schedule the next spawn after a random delay
@@ -600,6 +584,55 @@ const animalMealPool = [
   { name: "Possum",  meal: ["ingredient1", "ingredient2", "ingredient4"] }
 ];
 
+document.getElementById("settingsButton").onclick = () => {
+  document.querySelectorAll(".ui").forEach(el => {
+    el.style.display = "none";
+  });
+  document.getElementById("settingsMenu").style.display = "block";
+  document.getElementById("bgm").play();
+}
+
+/****************************************************
+ * 🔊 Global Sound Control
+ ****************************************************/
+const toggleSoundBtn = document.getElementById("toggleSound");
+let soundMuted = localStorage.getItem("soundMuted") === "true";
+
+function updateMuteState() {
+  document.querySelectorAll("audio").forEach(a => a.muted = soundMuted);
+  toggleSoundBtn.textContent = soundMuted ? "Unmute Sound" : "Mute Sound";
+  localStorage.setItem("soundMuted", soundMuted);
+}
+
+// run once at start
+updateMuteState();
+
+toggleSoundBtn.addEventListener("click", () => {
+  soundMuted = !soundMuted;
+  updateMuteState();
+});
+
+// helper for all sounds
+function playSound(src) {
+  const audio = new Audio(src);
+  audio.muted = soundMuted;
+  audio.play();
+}
+
+document.getElementById("colourBlind").onclick = () => {
+  colourBlindMode = !colourBlindMode; // toggle on/off
+  toggleColourBlindMode(colourBlindMode);
+};
+
+function toggleColourBlindMode(enabled) {
+  // Handle ingredients
+  document.querySelectorAll(".ingredient").forEach(img => {
+    const base = img.dataset.base;
+    if (!base) return;
+    img.src = `Assets/Food Art/${enabled ? base.replace(".png", "_cb.png") : base}`;
+  });
+}
+
 document.querySelectorAll(".levelSelect").forEach(btn => {
   btn.onclick = () => {
     document.getElementById("bgm").play();
@@ -642,4 +675,3 @@ document.getElementById("endlessMode").onclick = () => {
 
   startEndlessRound();
 };
-

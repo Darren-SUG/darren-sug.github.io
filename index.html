@@ -14,6 +14,14 @@
         <h1>Outback Cafe</h1>
         <button class="levelSelect">Select Level</button>
         <button id="endlessMode">Endless Mode</button>
+        <button id="settingsButton">Settings</button>
+    </div>
+
+    <div class="ui" id="settingsMenu">
+        <h2>Settings</h2>
+        <button id="toggleSound"></button>
+        <button id="colourBlind">Toggle Colour Blind Mode</button>
+        <button class="backToMain">Back to Main Menu</button>
     </div>
 
     <!-- ===== Level Selection Menu ===== -->
@@ -76,19 +84,20 @@
 
         <!-- Left ingredient table -->
         <div id="leftIngredientZone">
-            <img class="ingredient" id="ingredient1" src="Assets/Food Art/EucalyptusLeafPNG128.png">
-            <img class="ingredient" id="ingredient2" src="Assets/Food Art/GrassPNG128.png">
-            <img class="ingredient" id="ingredient3" src="Assets/Food Art/Temp Food 3.PNG">
-            <img class="ingredient" id="ingredient4" src="Assets/Food Art/Temp Food 4.PNG">
+            <img class="ingredient" id="ingredient1" data-base="EucalyptusLeafPNG128.png" src="Assets/Food Art/EucalyptusLeafPNG128.png">
+            <img class="ingredient" id="ingredient2" data-base="GrassPNG128.png" src="Assets/Food Art/GrassPNG128.png">
+            <img class="ingredient" id="ingredient3" data-base="Temp Food 3.PNG" src="Assets/Food Art/Temp Food 3.PNG">
+            <img class="ingredient" id="ingredient1Chopped" data-base="" style="display: none;">
+            <img class="ingredient" id="ingredient2Chopped" data-base="" style="display: none;">
+            <img class="ingredient" id="ingredient3Chopped" data-base="" style="display: none;">
         </div>
 
         <!-- Right ingredient table -->
         <div id="rightIngredientZone">
-            <img class="ingredient" id="ingredient5" src="Assets/Food Art/Temp Food 5.PNG">
-            <img class="ingredient" id="ingredient6" src="Assets/Food Art/Temp Food 6.PNG">
-            <img class="ingredient" id="ingredient7" src="Assets/Food Art/Temp Food 7.PNG">
-            <img class="ingredient" id="ingredientCup" src="Assets/Food Art/cup.png">
-            <img id="ingredientCupFilled" style="display:none;" src="Assets/Food Art/cupOfWater.png">
+            <img class="ingredient" id="ingredient4" data-base="Temp Food 4.PNG" src="Assets/Food Art/Temp Food 4.PNG">
+            <img class="ingredient" id="ingredientCup" data-base="cup.png" src="Assets/Food Art/cup.png">
+            <img class="ingredient" id="ingredient4Chopped" data-base="" style="display: none;">
+            <img class="ingredient" id="ingredientCupFilled" data-base="cupOfWater.png" style="display:none;" src="Assets/Food Art/cupOfWater.png">
         </div>
         <div id="chopper">
             <div class="player-walking-spot" id="spot14"></div>
