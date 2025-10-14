@@ -164,6 +164,7 @@ class Player {
         this.heldItem.classList.add("dropped");
         plateContents["waterCooler"].push(this.heldItem);
         this.heldItem = null;
+        new Audio("Assets/SFX/WaterCooler.mp3").play();
         
         // fill cup after X time
         setTimeout(() => {
@@ -196,6 +197,7 @@ class Player {
         this.heldItem.classList.add("dropped");
         plateContents["chopper"].push(this.heldItem);
         this.heldItem = null;
+        new Audio("Assets/SFX/KitchenHand.mp3").play();
         
         // chop ingredient after X time
         setTimeout(() => {
