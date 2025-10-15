@@ -1,80 +1,194 @@
 body {
     margin: 0;
     padding: 0;
+    background-color: #87CEEB;
 }
 
+/* ===== MAIN MENU STYLES ===== */
+#mainMenu {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  height: 100vh;
+  width: 100vw;
+  background: linear-gradient(to bottom, #f9e8c6 0%, #f4c88c 100%);
+
+  gap: 1.5rem;
+  font-family: "Poppins", sans-serif;
+}
+
+/* ===== Logo ===== */
+#mainMenu #logo {
+  width: 40%;
+  max-width: 400px;
+  margin-bottom: 2rem;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
+}
+
+#mainMenu #logo {
+  animation: floatLogo 3s ease-in-out infinite;
+}
+
+/* ===== GENERAL UI STYLES ===== */
+/* === Center all UI menus === */
+.ui {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;     /* centers horizontally */
+  justify-content: center; /* centers vertically */
+
+  gap: 1rem;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(5px);
+  text-align: center;
+  font-family: "Poppins", sans-serif;
+  color: #fff;
+  z-index: 10;
+}
+
+/* Center headings and buttons in each menu */
+.ui h1, .ui h2 {
+  text-align: center;
+  margin: 0 0 1rem 0;
+  width: 100%;
+}
+
+/* Center the buttons in a vertical column */
+.ui button {
+  display: block;
+  width: 18vw;
+  margin: 0.4rem auto; /* center horizontally */
+  background-color: #d86b27;
+  color: white;
+  border: none;
+  padding: 0.9rem 1.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+}
+
+.ui button:hover {
+  background-color: #b8571f;
+  transform: translateY(-2px);
+}
+
+/* ===== LEVEL MENU ===== */
+#levelMenu {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+#levelMenu button.levelButton {
+  width: 200px;
+  background-color: #e78c35;
+}
+
+#levelMenu button.levelButton.completed {
+  background-color: #5ac85a;
+  color: #fff;
+}
+
+/* ===== SETTINGS MENU ===== */
 #settingsMenu {
-    width: 20%;
-    height: 30%;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: rgba(255, 255, 255, 0.9);
-    border: 2px solid #000;
-    border-radius: 10px;
-    padding: 1%;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-around;
-    z-index: 100;
-    display: none;
+  background: linear-gradient(to bottom, #f9e8c6 0%, #f4c88c 100%);
 }
 
 .completed {
     background-color: gold;
 }
 
+#toggleSound::after {
+  content: "Toggle Sound";
+}
+
+#colourBlind {
+  background-color: #3ca4e2;
+}
+
+/* ===== HUD (In-Game Overlay) ===== */
+#hud {
+  position: fixed;
+  top: 1vh;
+  left: 1vw;
+  width: auto;
+  height: 0;
+  display: flex;
+  flex-direction: column; /* stack timer and score vertically */
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 0.5rem; /* space between timer and score */
+  color: #fff;
+  font-size: 1.2rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+  z-index: 20;
+  pointer-events: none; /* let gameplay clicks pass through */
+}
+
+#hud span {
+  background: rgba(0, 0, 0, 0.5);
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  pointer-events: auto;
+}
+
+/* ===== LEVEL COMPLETE MENU ===== */
+#levelComplete {
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+#levelCompleteText {
+  font-size: 2rem;
+  color: #ffdf82;
+  text-shadow: 3px 3px 8px rgba(0,0,0,0.6);
+  margin-bottom: 0.5rem;
+}
+
+#finalScore {
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+/* ===== CAFE MENU ===== */
 #cafeMenu {
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    top: 0%;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: rgba(255, 255, 255, 0.8);
-    border: 2px solid #000;
-    border-radius: 10px;
-    padding: 1%;
-    box-sizing: border-box;
-    overflow-y: auto;
-    z-index: 99;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 16px;
 }
 
 .menu-entry {
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem;
+  background: rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 0.7rem 1rem;
+  margin: 0.5rem 0;
 }
 
 .menu-animal {
-    width: 4vw;
-    height: 4vw;
-    margin-right: 1vw;
+  width: 80px;
+  height: 80px;
 }
 
 .menu-ingredient {
-    width: 4vw;
-    height: 4vw;
-    position: relative;
-    top: 0%;
-    margin-left: 1vw;
-}
-
-#hud {
-    width: 20%;
-    height: 10%;
-    position: absolute;
-    top: 1%;
-    left: 1%;
-    background-color: rgba(255, 255, 255, 0.8);
-    border: 2px solid #000;
-    border-radius: 10px;
-    padding: 1%;
-    box-sizing: border-box;
-    z-index: 2;
-    display: none;
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
 }
 
 #customerZone {
@@ -95,11 +209,11 @@ body {
 
 /* Customer spots */
 #customerSpot0 {
-    left: 9%;
+    left: 9.5%;
 }
 
 #customerSpot1 {
-    left: 42%;
+    left: 43%;
 }
 
 #customerSpot2 {
@@ -108,7 +222,7 @@ body {
 
 /* Restaurant background */
 #levelZone {
-    width: 99.3vw;
+    width: 100vw;
     height: 100vh;
     position: relative;
     background-image: url('Assets/Background Art/backgroundPNG.png');
@@ -218,8 +332,8 @@ body {
 
 .plate {
     display: flex;
-    width: 8vw;
-    height: 8vw;
+    width: 7vw;
+    height: 7vw;
     top: 20%;
     background-image: url('Assets/Food Art/PlateSpritePNG64.png');
     background-size: cover;
@@ -347,8 +461,8 @@ body {
 
 /* Customer styling */
 .customer {
-    width: 8vw;
-    height: 8vw;
+    width: 7.5vw;
+    height: 7.5vw;
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;

@@ -11,13 +11,13 @@
 <body>
     <!-- ===== Main Menu ===== -->
     <div class="ui" id="mainMenu">
-        <h1>Outback Cafe</h1>
+        <img id="logo" src="Assets/Background Art/outback cafe logo.png" alt="Game Logo">
         <button class="levelSelect">Select Level</button>
         <button id="endlessMode">Endless Mode</button>
         <button id="settingsButton">Settings</button>
     </div>
 
-    <div class="ui" id="settingsMenu">
+    <div class="ui" id="settingsMenu" style="display: none;">
         <h2>Settings</h2>
         <button id="toggleSound"></button>
         <button id="colourBlind">Toggle Colour Blind Mode</button>
@@ -41,7 +41,7 @@
     </div>
 
     <!-- ===== Score / Timer HUD ===== -->
-    <div class="ui" id="hud">
+    <div class="ui" id="hud" style="display: none;">
         <span id="scoreDisplay">Points: 0</span>
         <span id="timer">Time Left: 60s</span>
     </div>
