@@ -268,6 +268,7 @@ class Animal {
   }
 
   leaveAngry() {
+    currentScore -= 10;
     clearInterval(this.timer);
     playSound("Assets/SFX/AnimalAngry.mp3");
     const img = document.createElement("img");
