@@ -381,7 +381,7 @@ function endLevel() {
 
   // 🧹 Reset all plates
   Object.keys(plateContents).forEach(plateId => {
-    if (plateId !== "waterCooler" || plateId !== "chopper") {  
+    if (plateId.startsWith("plate")) {  
       plateContents[plateId] = [];
       const plateEl = document.getElementById(plateId);
       if (plateEl) plateEl.innerHTML = "";
