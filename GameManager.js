@@ -269,6 +269,7 @@ class Animal {
 
   leaveAngry() {
     currentScore -= 10;
+    updateScore();
     clearInterval(this.timer);
     playSound("Assets/SFX/AnimalAngry.mp3");
     const img = document.createElement("img");
@@ -355,11 +356,14 @@ function endLevel() {
   for (let i = 0; i < levels.length; i++) {
     if (levels[i] === currentLevel && i < levels.length - 1) {
       nextLevel = levels[i + 1];
+      document.getElementById("nextLevelBtn").onclick = () => {
+        showCafeMenu(nextLevel);
+      };
       break;
     }
-  }
-  document.getElementById("nextLevelBtn").onclick = () => {
-    showCafeMenu(nextLevel);
+    if (nextLevel === null) {
+      document.getElementById("nextLevelBtn").style.display = "none"; // hide next button if no next level
+    }
   }
 
   document.getElementById("restartLevelBtn").onclick = () => {
@@ -427,32 +431,32 @@ const level1 = {
 
 const level2 = {
   customers: [
-    { name: "Koala", meal: ["ingredient1"], ticker: 15},
-    { name: "Kangaroo", meal: ["ingredient2", "ingredientCupFilled"], ticker: 15}
+    { name: "Koala", meal: ["ingredient1"], ticker: 20},
+    { name: "Kangaroo", meal: ["ingredient2", "ingredientCupFilled"], ticker: 20}
   ]
 };
 
 const level3 = {
   customers: [
-    { name: "Koala", meal: ["ingredient1"], ticker: 15},
-    { name: "Wombat", meal: ["ingredient1", "ingredient2"], ticker: 15},
-    { name: "Snake", meal: ["ingredient3"], ticker: 15}
+    { name: "Koala", meal: ["ingredient1"], ticker: 20},
+    { name: "Wombat", meal: ["ingredient1", "ingredient2"], ticker: 20},
+    { name: "Snake", meal: ["ingredient3"], ticker: 20}
   ]
 };
 
 const level4 = {
   customers: [
-    { name: "Koala", meal: ["ingredient1"], ticker: 15},
-    { name: "Wombat", meal: ["ingredient1", "ingredient2", "ingredientCupFilled"], ticker: 15},
-    { name: "Snake", meal: ["ingredient3Chopped"], ticker: 15}
+    { name: "Koala", meal: ["ingredient1"], ticker: 20},
+    { name: "Wombat", meal: ["ingredient1", "ingredient2", "ingredientCupFilled"], ticker: 20},
+    { name: "Snake", meal: ["ingredient3Chopped"], ticker: 20}
   ]
 };
 
 const level5 = {
   customers: [
-    { name: "Possum", meal: ["ingredient1", "ingredient2", "ingredient4Chopped"], ticker: 15},
-    { name: "Wombat", meal: ["ingredient1", "ingredient2", "ingredientCupFilled"], ticker: 15},
-    { name: "Snake", meal: ["ingredient3Chopped", "ingredientCupFilled"], ticker: 15}
+    { name: "Possum", meal: ["ingredient1", "ingredient2", "ingredient4Chopped"], ticker: 20},
+    { name: "Wombat", meal: ["ingredient1", "ingredient2", "ingredientCupFilled"], ticker: 20},
+    { name: "Snake", meal: ["ingredient3Chopped", "ingredientCupFilled"], ticker: 20}
   ]
 };
 
@@ -570,7 +574,7 @@ function generateEndlessLevel() {
     levelData.customers.push({
       name: animalData.name,
       meal: animalData.meal,
-      ticker: 15
+      ticker: 20
     });
   });
 

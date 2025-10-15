@@ -23,6 +23,10 @@ body {
     display: none;
 }
 
+.completed {
+    background-color: gold;
+}
+
 #cafeMenu {
     width: 100%;
     height: 100%;
