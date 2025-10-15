@@ -182,7 +182,7 @@ class Player {
       .find(([id, s]) => s === this.currentSpotId && id === "chopper");
 
     if (chopperSpot) {
-      if (this.heldItem.id === "ingredient4" && this.heldItem.id === "ingredient3" && !this.chopperBusy && plateContents["chopper"].length < 1) {
+      if ((this.heldItem.id === "ingredient4" || this.heldItem.id === "ingredient3") && !this.chopperBusy && plateContents["chopper"].length < 1) {
         this.chopperBusy = true;
         const chopperEl = document.getElementById("chopper");
         chopperEl.appendChild(this.heldItem);
