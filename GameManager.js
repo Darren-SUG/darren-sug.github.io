@@ -168,7 +168,7 @@ class Player {
           const cupEl = plateContents["waterCooler"][0];
           if (cupEl) {
             cupEl.id = "ingredientCupFilled";
-            cupEl.src = "Assets/Food Art/cupOfWater.png";
+            cupEl.src = "Assets/Food Art/Watercup.png";
           }
           this.dispenserBusy = false;
         }, 4000);
@@ -585,8 +585,8 @@ const animalMealPool = [
   { name: "Koala",   meal: ["ingredient1"] },
   { name: "Kangaroo", meal: ["ingredient2", "ingredientCupFilled"] },
   { name: "Wombat",  meal: ["ingredient1", "ingredient2", "ingredientCupFilled"] },
-  { name: "Snake",   meal: ["ingredient3", "ingredientCupFilled"] },
-  { name: "Possum",  meal: ["ingredient1", "ingredient2", "ingredient4"] }
+  { name: "Snake",   meal: ["ingredient3Chopped", "ingredientCupFilled"] },
+  { name: "Possum",  meal: ["ingredient1", "ingredient2", "ingredient4Chopped"] }
 ];
 
 document.getElementById("settingsButton").onclick = () => {
