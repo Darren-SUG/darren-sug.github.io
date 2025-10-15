@@ -103,10 +103,6 @@ body {
   background: linear-gradient(to bottom, #f9e8c6 0%, #f4c88c 100%);
 }
 
-.completed {
-    background-color: gold;
-}
-
 #toggleSound::after {
   content: "Toggle Sound";
 }
@@ -246,7 +242,7 @@ body {
 }
 
 #player {
-    background-image: url('Assets/Player Art/Temp Player.PNG');
+    background-image: url('Assets/Player Art/chef.png');
     width: 6vw;
     height: 6vw;
     top: 50%;
