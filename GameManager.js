@@ -10,6 +10,7 @@ let currentScore = 0;
 let levelTimer   = LEVEL_TIME;
 let requiredPoints = 300;
 let customers    = [];         // active Animal instances
+let spawnTimeouts = [];
 let gameInterval = null;
 let levelActive = false;
 let colourBlindMode = false;
@@ -352,18 +353,26 @@ function endLevel() {
   heading.textContent = currentScore >= requiredPoints ? "Completed!" : "Time's Up!";
   menu.style.display = "block";
 
-  let nextLevel = null;
-  for (let i = 0; i < levels.length; i++) {
-    if (levels[i] === currentLevel && i < levels.length - 1) {
-      nextLevel = levels[i + 1];
-      document.getElementById("nextLevelBtn").onclick = () => {
-        showCafeMenu(nextLevel);
-      };
-      break;
+  if (!document.getElementById("endlessMode").classList.contains("active")) {
+    let nextLevel = null;
+
+    for (let i = 0; i < levels.length; i++) {
+      if (levels[i] === currentLevel && i < levels.length - 1) {
+        nextLevel = levels[i + 1];
+        break;
+      }
     }
-    if (nextLevel === null) {
-      document.getElementById("nextLevelBtn").style.display = "none"; // hide next button if no next level
+
+    const nextBtn = document.getElementById("nextLevelBtn");
+
+    if (nextLevel) {
+      nextBtn.style.display = "block";
+      nextBtn.onclick = () => showCafeMenu(nextLevel);
+    } else {
+      nextBtn.style.display = "none"; // hide if no next level (i.e. Level 5)
     }
+  } else {
+    nextLevel = null;
   }
 
   document.getElementById("restartLevelBtn").onclick = () => {
@@ -378,6 +387,9 @@ function endLevel() {
     }
   });
   customers = [];
+  // 🧹 Stop all pending spawns
+  spawnTimeouts.forEach(id => clearTimeout(id));
+  spawnTimeouts = []; // reset
 
   // 🧹 Reset all plates
   Object.keys(plateContents).forEach(plateId => {
@@ -519,6 +531,8 @@ function startLevel(levelData) {
   updateScore();
   startTimer();
   customers = [];
+  spawnTimeouts.forEach(id => clearTimeout(id));
+  spawnTimeouts = [];
   levelActive = true;
 
   // Reset plates
@@ -530,27 +544,21 @@ function startLevel(levelData) {
 
   // Function to spawn a customer
   function spawnCustomer() {
-    if (!levelActive || levelData.customers.length === 0) return;  // No customers left to spawn
+    if (!levelActive || levelData.customers.length === 0) return;
 
-    // Pick a random customer from the list
     const randomIndex = Math.floor(Math.random() * levelData.customers.length);
     const randomCustomer = levelData.customers[randomIndex];
-
-    // Find a free plate before creating a new animal
     const freePlateId = Object.keys(plateAssignments).find(plateId => plateAssignments[plateId] === null);
 
     if (freePlateId) {
-      // There is a free plate, create the animal (it assigns itself in the constructor)
-      // edit the last number to change patience
       const animal = new Animal(randomCustomer.name, randomCustomer.meal, randomCustomer.ticker);
       customers.push(animal);
-      
       playSound("Assets/SFX/Ding.mp3");
     }
 
-    // Schedule the next spawn after a random delay
     const nextDelay = Math.floor(Math.random() * (maxDelay - minDelay + 1)) + minDelay;
-    setTimeout(spawnCustomer, nextDelay);  // Recursively call spawnCustomer after a random delay
+    const timeoutId = setTimeout(spawnCustomer, nextDelay);
+    spawnTimeouts.push(timeoutId); // ✅ store timeout
   }
 
   // Start spawning customers
