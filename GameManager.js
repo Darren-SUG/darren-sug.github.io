@@ -46,6 +46,8 @@ const plateAssignments = {
   plate3: null
 };
 
+const activeSounds = []; // track currently playing sounds
+
 /****************************************************
  * Player Class
  ****************************************************/
@@ -169,7 +171,11 @@ class Player {
           const cupEl = plateContents["waterCooler"][0];
           if (cupEl) {
             cupEl.id = "ingredientCupFilled";
-            cupEl.src = "Assets/Food Art/Watercup.png";
+            if (colourBlindMode) {
+              cupEl.src = `Assets/Food Art/Watercup_cb.png`;
+            } else {
+              cupEl.src = `Assets/Food Art/Watercup.png`;
+            }
           }
           this.dispenserBusy = false;
         }, 4000);
@@ -198,7 +204,11 @@ class Player {
           const ingEl = plateContents["chopper"][0];
           if (ingEl) {
             ingEl.id = ingEl.id + "Chopped";
-            ingEl.src = `Assets/Food Art/${ingEl.id}.png`;
+            if (colourBlindMode) {
+              ingEl.src = `Assets/Food Art/${ingEl.id}_cb.png`;
+            } else {
+              ingEl.src = `Assets/Food Art/${ingEl.id}.png`;
+            }
           }
           this.chopperBusy = false;
         }, 4000);
@@ -344,6 +354,14 @@ function startTimer() {
 
 function endLevel() {
   clearInterval(gameInterval);
+  // 🔇 Stop all currently playing sounds
+  activeSounds.forEach(a => {
+    a.pause();
+    a.currentTime = 0;
+  });
+  activeSounds.length = 0; // clear the list
+  playerObj.dispenserBusy = false;
+  playerObj.chopperBusy = false;
   document.getElementById("hud").style.display = "none";
   levelActive = false;
   const menu = document.getElementById("levelComplete");
@@ -393,10 +411,20 @@ function endLevel() {
 
   // 🧹 Reset all plates
   Object.keys(plateContents).forEach(plateId => {
+    const plateEl = document.getElementById(plateId);
     if (plateId.startsWith("plate")) {  
       plateContents[plateId] = [];
-      const plateEl = document.getElementById(plateId);
       if (plateEl) plateEl.innerHTML = "";
+    } else {
+      plateContents[plateId] = [];
+      if (plateEl) {
+        for (let i = 0; i < plateEl.children.length; i++) {
+          if (plateEl.children[i].classList.contains("dropped")) {
+            plateEl.children[i].remove();
+            i--; // adjust index after removal
+          }
+        }
+      }
     }
   });
 
@@ -630,6 +658,15 @@ function playSound(src) {
   const audio = new Audio(src);
   audio.muted = soundMuted;
   audio.play();
+  activeSounds.push(audio);
+
+  // Remove it from the list once it ends
+  audio.addEventListener("ended", () => {
+    const index = activeSounds.indexOf(audio);
+    if (index !== -1) activeSounds.splice(index, 1);
+  });
+
+  return audio;
 }
 
 document.getElementById("colourBlind").onclick = () => {
@@ -677,6 +714,7 @@ document.querySelectorAll(".levelButton").forEach((button, index) => {
 });
 
 document.getElementById("endlessMode").onclick = () => {
+  currentScore = 0;
   document.getElementById("bgm").play();
   document.querySelectorAll(".ui").forEach(el => el.style.display = "none");
   document.getElementById("endlessMode").classList.add("active");
