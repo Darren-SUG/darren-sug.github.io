@@ -1,5 +1,5 @@
 /****************************************************
- * OUTBACK CAFE – Single JS File (with new plate system + mute toggle)
+ * OUTBACK CAFE – Single JS File (reorganized, same code)
  ****************************************************/
 
 // ===== Global Config =====
@@ -7,6 +7,8 @@ const LEVEL_TIME = 60;         // seconds
 const POINTS_PER_MEAL = 100;
 let currentLevel = null;
 let currentScore = 0;
+let endlessHighScore = 0;
+let endlessWaveCount = 0;
 let levelTimer   = LEVEL_TIME;
 let requiredPoints = 300;
 let customers    = [];         // active Animal instances
@@ -14,6 +16,39 @@ let spawnTimeouts = [];
 let gameInterval = null;
 let levelActive = false;
 let colourBlindMode = false;
+
+/****************************************************
+ *  Cognitive / Planning Metrics
+ ****************************************************/
+
+const stats = {
+  sessionId: Date.now(),
+  totalCustomersSpawned: 0,
+  totalCustomersServed: 0,
+  animalTypesSeen: new Set(),
+  animalTypesServed: new Set(),
+  servePatiences: [], // patience (0–1) at serve time
+  lastChopperEmptyTime: 0,
+  lastCoolerEmptyTime: 0,
+  totalChopperIdle: 0, // in seconds
+  totalCoolerIdle: 0,
+  startTime: 0,
+  endTime: 0,
+};
+
+/****************************************************
+ *  Global Totals Across All Levels
+ ****************************************************/
+const globalStats = {
+  sessions: [],
+  totalPlanning: 0,
+  totalServeSpeed: 0,
+  totalAnticipation: 0,
+  totalLevelsPlayed: 0,
+  totalCustomersServed: 0,
+  totalCustomersSpawned: 0,
+  totalDuration: 0,
+};
 
 // Track which plates have items (arrays allow up to 3 ingredients)
 const plateContents = {
@@ -49,8 +84,72 @@ const plateAssignments = {
 const activeSounds = []; // track currently playing sounds
 
 /****************************************************
- * Player Class
+ * Utility & Helpers
  ****************************************************/
+
+function updateScore() {
+  document.getElementById("scoreDisplay").textContent = `Score: ${currentScore}`;
+}
+
+/****************************************************
+ *  Global Sound Control (helper & mute toggle)
+ ****************************************************/
+
+// helper for all sounds
+function playSound(src) {
+  const audio = new Audio(src);
+  audio.muted = soundMuted;
+  audio.play();
+  activeSounds.push(audio);
+
+  // Remove it from the list once it ends
+  audio.addEventListener("ended", () => {
+    const index = activeSounds.indexOf(audio);
+    if (index !== -1) activeSounds.splice(index, 1);
+  });
+
+  return audio;
+}
+
+const toggleSoundBtn = document.getElementById("toggleSound");
+let soundMuted = localStorage.getItem("soundMuted") === "true";
+
+function updateMuteState() {
+  document.querySelectorAll("audio").forEach(a => a.muted = soundMuted);
+  toggleSoundBtn.textContent = soundMuted ? "Unmute Sound" : "Mute Sound";
+  localStorage.setItem("soundMuted", soundMuted);
+}
+
+// run once at start
+updateMuteState();
+
+toggleSoundBtn.addEventListener("click", () => {
+  soundMuted = !soundMuted;
+  updateMuteState();
+});
+
+/****************************************************
+ * Colour-Blind Mode Helpers
+ ****************************************************/
+
+document.getElementById("colourBlind").onclick = () => {
+  colourBlindMode = !colourBlindMode; // toggle on/off
+  toggleColourBlindMode(colourBlindMode);
+};
+
+function toggleColourBlindMode(enabled) {
+  // Handle ingredients
+  document.querySelectorAll(".ingredient").forEach(img => {
+    const base = img.dataset.base;
+    if (!base) return;
+    img.src = `Assets/Food Art/${enabled ? base.replace(".png", "_cb.png") : base}`;
+  });
+}
+
+/****************************************************
+ * Classes
+ ****************************************************/
+
 class Player {
   constructor(elementId) {
     this.element = document.getElementById(elementId);
@@ -151,6 +250,22 @@ class Player {
   drop() {
     if (!this.heldItem || !this.currentSpotId) return false;
 
+    // Track water cooler downtime
+    if (plateContents["waterCooler"].length === 0 && this.currentSpotId !== elementToSpotMap["waterCooler"]) {
+      if (stats.lastCoolerEmptyTime === 0) stats.lastCoolerEmptyTime = Date.now();
+    } else if (plateContents["waterCooler"].length > 0 && stats.lastCoolerEmptyTime > 0) {
+      stats.totalCoolerIdle += (Date.now() - stats.lastCoolerEmptyTime) / 1000;
+      stats.lastCoolerEmptyTime = 0;
+    }
+
+    // Track chopper downtime
+    if (plateContents["chopper"].length === 0 && this.currentSpotId !== elementToSpotMap["chopper"]) {
+      if (stats.lastChopperEmptyTime === 0) stats.lastChopperEmptyTime = Date.now();
+    } else if (plateContents["chopper"].length > 0 && stats.lastChopperEmptyTime > 0) {
+      stats.totalChopperIdle += (Date.now() - stats.lastChopperEmptyTime) / 1000;
+      stats.lastChopperEmptyTime = 0;
+    }
+
     // ---- Water Cooler ----
     const coolerSpot = Object.entries(elementToSpotMap)
       .find(([id, s]) => s === this.currentSpotId && id === "waterCooler");
@@ -243,9 +358,6 @@ class Player {
   }
 }
 
-/****************************************************
- * Animal / Customer Class
- ****************************************************/
 class Animal {
   constructor(name, correctFood, patienceTicker) {
     this.name = name;
@@ -306,6 +418,11 @@ class Animal {
       clearInterval(this.timer);
       playSound("Assets/SFX/AnimalHappy.mp3");
 
+      //  Record serve stats
+      stats.totalCustomersServed++;
+      stats.animalTypesServed.add(this.name);
+      stats.servePatiences.push(this.patience);
+
       const img = document.createElement("img");
       img.src = "Assets/Customer Art/happy.png";
       img.className = "reaction-icon";
@@ -326,8 +443,9 @@ class Animal {
 }
 
 /****************************************************
- * Game Flow
+ * Player instance & click wiring for interactable DOM
  ****************************************************/
+
 const playerObj = new Player("player");
 
 document.querySelectorAll(".plate, .ingredient, #waterCooler, #bin, #chopper")
@@ -339,9 +457,9 @@ document.querySelectorAll(".plate, .ingredient, #waterCooler, #bin, #chopper")
     el.style.cursor = "pointer";
   });
 
-function updateScore() {
-  document.getElementById("scoreDisplay").textContent = `Score: ${currentScore}`;
-}
+/****************************************************
+ * Game Flow (timer, start/end level, spawn, resets)
+ ****************************************************/
 
 function startTimer() {
   const timerEl = document.getElementById("timer");
@@ -354,7 +472,7 @@ function startTimer() {
 
 function endLevel() {
   clearInterval(gameInterval);
-  // 🔇 Stop all currently playing sounds
+  //  Stop all currently playing sounds
   activeSounds.forEach(a => {
     a.pause();
     a.currentTime = 0;
@@ -362,6 +480,10 @@ function endLevel() {
   activeSounds.length = 0; // clear the list
   playerObj.dispenserBusy = false;
   playerObj.chopperBusy = false;
+  if (playerObj.heldItem) {
+    playerObj.heldItem.remove();
+    playerObj.heldItem = null;
+  }
   document.getElementById("hud").style.display = "none";
   levelActive = false;
   const menu = document.getElementById("levelComplete");
@@ -395,9 +517,10 @@ function endLevel() {
 
   document.getElementById("restartLevelBtn").onclick = () => {
     showCafeMenu(currentLevel);
+    currentScore = 0;
   }
 
-  // 🧹 Clean up all current animals
+  //  Clean up all current animals
   customers.forEach(c => {
     clearInterval(c.timer); // stop patience countdown
     if (c.element && c.element.parentNode) {
@@ -405,11 +528,11 @@ function endLevel() {
     }
   });
   customers = [];
-  // 🧹 Stop all pending spawns
+  //  Stop all pending spawns
   spawnTimeouts.forEach(id => clearTimeout(id));
   spawnTimeouts = []; // reset
 
-  // 🧹 Reset all plates
+  //  Reset all plates
   Object.keys(plateContents).forEach(plateId => {
     const plateEl = document.getElementById(plateId);
     if (plateId.startsWith("plate")) {  
@@ -432,19 +555,88 @@ function endLevel() {
     plateAssignments[p] = null;
   });
 
-  // 🧩 Endless Mode Handling
+  //  Endless Mode Handling
   if (document.getElementById("endlessMode").classList.contains("active")) {
+    // Record wave stats before resetting
+    stats.endTime = Date.now();
+
+    const planningPercent =
+      (stats.animalTypesServed.size / stats.animalTypesSeen.size) * 100 || 0;
+
+    const avgPatience =
+      stats.servePatiences.reduce((a, b) => a + b, 0) / (stats.servePatiences.length || 1);
+    const serveSpeedPercent = Math.min(100, Math.max(0, avgPatience * 100));
+
+    // Check dynamically whether water cooler or chopper were needed
+    const requiresCooler = currentLevel.customers.some(c =>
+      c.meal.some(i => i.includes("CupFilled"))
+    );
+    const requiresChopper = currentLevel.customers.some(c =>
+      c.meal.some(i => i.includes("Chopped"))
+    );
+
+    let anticipationPercent = 100;
+    if (requiresCooler)
+      anticipationPercent -= Math.min(100, Math.floor(stats.totalCoolerIdle / 5) * 5);
+    if (requiresChopper)
+      anticipationPercent -= Math.min(100, Math.floor(stats.totalChopperIdle / 5) * 5);
+    anticipationPercent = Math.max(0, anticipationPercent);
+
+    // Generate Endless Wave name with attempt tracking
+    endlessWaveCount++; //  Increment wave count each time a wave finishes
+    const baseWaveName = `Endless Wave ${endlessWaveCount}`;
+    const repeatCount =
+      globalStats.sessions.filter(s => s.levelName.startsWith(baseWaveName)).length + 1;
+
+    const report = {
+      levelName: `${baseWaveName} (Attempt ${repeatCount})`,
+      planningPercent,
+      serveSpeedPercent,
+      anticipationPercent,
+      totalCustomersServed: stats.totalCustomersServed,
+      totalCustomersSpawned: stats.totalCustomersSpawned,
+      duration: ((stats.endTime - stats.startTime) / 1000).toFixed(1),
+    };
+
+    globalStats.sessions.push(report);
+    globalStats.totalPlanning += planningPercent;
+    globalStats.totalServeSpeed += serveSpeedPercent;
+    globalStats.totalAnticipation += anticipationPercent;
+    globalStats.totalLevelsPlayed++;
+    globalStats.totalCustomersServed += stats.totalCustomersServed;
+    globalStats.totalCustomersSpawned += stats.totalCustomersSpawned;
+    globalStats.totalDuration += parseFloat(report.duration);
+
+    globalStats.avgPlanning = globalStats.totalPlanning / globalStats.totalLevelsPlayed;
+    globalStats.avgServeSpeed = globalStats.totalServeSpeed / globalStats.totalLevelsPlayed;
+    globalStats.avgAnticipation = globalStats.totalAnticipation / globalStats.totalLevelsPlayed;
+
+    // Reset for next wave
+    Object.assign(stats, {
+      totalCustomersSpawned: 0,
+      totalCustomersServed: 0,
+      animalTypesSeen: new Set(),
+      animalTypesServed: new Set(),
+      servePatiences: [],
+      lastChopperEmptyTime: 0,
+      lastCoolerEmptyTime: 0,
+      totalChopperIdle: 0,
+      totalCoolerIdle: 0,
+      startTime: Date.now(),
+    });
+
     if (currentScore >= requiredPoints) {
-      // Player passed this wave
-      requiredPoints += 300; // raise goal
-      showCafeMenu(generateEndlessLevel()); // show next random wave menu
+      requiredPoints += 300;
+      showCafeMenu(generateEndlessLevel());
     } else {
-      // Player failed the wave – normal fail screen
+      endlessHighScore = Math.max(currentScore, endlessHighScore);
+      document.getElementById("highScore").textContent = "High Score: " + endlessHighScore;
+      document.getElementById("highScore").style.display = "block";
       document.getElementById("levelComplete").style.display = "block";
-      document.getElementById("nextLevelBtn").style.display = "none"; // hide next button
-      document.querySelectorAll(".levelSelect")[1].style.display = "none"; // hide level select button
+      document.getElementById("nextLevelBtn").style.display = "none";
     }
-    return; // prevent normal levelComplete logic from firing again
+
+    return;
   } else {
     if (currentScore >= requiredPoints) {
       const currentLevelIndex = levels.indexOf(currentLevel);
@@ -457,11 +649,71 @@ function endLevel() {
       document.getElementById("levelComplete").style.display = "block";
     }
   }
+
+  stats.endTime = Date.now();
+
+  //  Compute metrics for this level
+  const planningPercent =
+    (stats.animalTypesServed.size / stats.animalTypesSeen.size) * 100 || 0;
+
+  const avgPatience =
+    stats.servePatiences.reduce((a, b) => a + b, 0) / (stats.servePatiences.length || 1);
+  const serveSpeedPercent = Math.min(100, Math.max(0, avgPatience * 100));
+
+  let anticipationPercent = 100;
+  if (currentLevel === level2 || currentLevel === level4 || currentLevel === level5) {
+    anticipationPercent -= Math.min(100, Math.floor(stats.totalCoolerIdle / 5) * 5);
+  }
+  if (currentLevel === level4 || currentLevel === level5) {
+    anticipationPercent -= Math.min(100, Math.floor(stats.totalChopperIdle / 5) * 5);
+  }
+  anticipationPercent = Math.max(0, anticipationPercent);
+
+  // Use actual level name (e.g. "Level 1") and include attempt number if replayed
+  const baseLevelName = currentLevel.name || `Level ${levels.indexOf(currentLevel) + 1}`;
+  const repeatCount =
+    globalStats.sessions.filter(s => s.levelName.startsWith(baseLevelName)).length + 1;
+
+  const report = {
+    levelName: `${baseLevelName} (Attempt ${repeatCount})`,
+    planningPercent,
+    serveSpeedPercent,
+    anticipationPercent,
+    totalCustomersServed: stats.totalCustomersServed,
+    totalCustomersSpawned: stats.totalCustomersSpawned,
+    duration: ((stats.endTime - stats.startTime) / 1000).toFixed(1),
+  };
+
+  //  Add to global cumulative stats
+  globalStats.sessions.push(report);
+  globalStats.totalPlanning += planningPercent;
+  globalStats.totalServeSpeed += serveSpeedPercent;
+  globalStats.totalAnticipation += anticipationPercent;
+  globalStats.totalCustomersServed += stats.totalCustomersServed;
+  globalStats.totalCustomersSpawned += stats.totalCustomersSpawned;
+  globalStats.totalDuration += parseFloat(report.duration);
+  globalStats.totalLevelsPlayed++;
+
+  //  Compute running averages
+  globalStats.avgPlanning =
+    globalStats.totalPlanning / globalStats.totalLevelsPlayed;
+  globalStats.avgServeSpeed =
+    globalStats.totalServeSpeed / globalStats.totalLevelsPlayed;
+  globalStats.avgAnticipation =
+    globalStats.totalAnticipation / globalStats.totalLevelsPlayed;
+
+  console.table(report);
+  console.log("Global averages:", {
+    avgPlanning: globalStats.avgPlanning.toFixed(1),
+    avgServeSpeed: globalStats.avgServeSpeed.toFixed(1),
+    avgAnticipation: globalStats.avgAnticipation.toFixed(1),
+  });
 }
 
 /****************************************************
- * Level / Menu
+ * Level / Menu Definitions & Helpers
  ****************************************************/
+
 const level1 = {
   customers: [
     { name: "Koala", meal: ["ingredient1"], ticker: 20},
@@ -501,9 +753,21 @@ const level5 = {
 };
 
 const levels = [level1, level2, level3, level4, level5];
+const levelTutorials = {
+  level1: "",
+  level2: "tutorial2",
+  level3: "",
+  level4: "tutorial3",
+  level5: ""
+};
 const levelNames = ["level1", "level2", "level3", "level4", "level5"];
 
 function showCafeMenu(levelData) {
+  const levelIndex = levels.indexOf(levelData);
+  const tutorialId = levelTutorials[levelNames[levelIndex]];
+  if (tutorialId && document.getElementById(tutorialId)) {
+    document.getElementById(tutorialId).style.display = "block";
+  }
   document.getElementById("levelComplete").style.display = "none";
   const menu = document.getElementById("cafeMenu");
   menu.innerHTML = "";
@@ -549,6 +813,7 @@ function startLevel(levelData) {
   document.getElementById("cafeMenu").style.display = "none";
   document.getElementById("hud").style.display = "block";
   currentLevel = levelData;
+  stats.startTime = Date.now();
   if (!document.getElementById("endlessMode").classList.contains("active")) {
     currentScore = 0;
   } else {
@@ -582,11 +847,15 @@ function startLevel(levelData) {
       const animal = new Animal(randomCustomer.name, randomCustomer.meal, randomCustomer.ticker);
       customers.push(animal);
       playSound("Assets/SFX/Ding.mp3");
+
+      // 🧠 Track unique animals
+      stats.totalCustomersSpawned++;
+      stats.animalTypesSeen.add(randomCustomer.name);
     }
 
     const nextDelay = Math.floor(Math.random() * (maxDelay - minDelay + 1)) + minDelay;
     const timeoutId = setTimeout(spawnCustomer, nextDelay);
-    spawnTimeouts.push(timeoutId); // ✅ store timeout
+    spawnTimeouts.push(timeoutId); //  store timeout
   }
 
   // Start spawning customers
@@ -594,6 +863,7 @@ function startLevel(levelData) {
 }
 
 function startEndlessRound() {
+  endlessWaveCount = 0;
   const endlessLevel = generateEndlessLevel();
   showCafeMenu(endlessLevel); // reuse your cafeMenu function
   currentLevel = endlessLevel;
@@ -625,6 +895,10 @@ const animalMealPool = [
   { name: "Possum",  meal: ["ingredient1", "ingredient2", "ingredient4Chopped"] }
 ];
 
+/****************************************************
+ * UI Controls & Event Listeners
+ ****************************************************/
+
 document.getElementById("settingsButton").onclick = () => {
   document.querySelectorAll(".ui").forEach(el => {
     el.style.display = "none";
@@ -633,72 +907,31 @@ document.getElementById("settingsButton").onclick = () => {
   document.getElementById("bgm").play();
 }
 
-/****************************************************
- * 🔊 Global Sound Control
- ****************************************************/
-const toggleSoundBtn = document.getElementById("toggleSound");
-let soundMuted = localStorage.getItem("soundMuted") === "true";
-
-function updateMuteState() {
-  document.querySelectorAll("audio").forEach(a => a.muted = soundMuted);
-  toggleSoundBtn.textContent = soundMuted ? "Unmute Sound" : "Mute Sound";
-  localStorage.setItem("soundMuted", soundMuted);
-}
-
-// run once at start
-updateMuteState();
-
-toggleSoundBtn.addEventListener("click", () => {
-  soundMuted = !soundMuted;
-  updateMuteState();
-});
-
-// helper for all sounds
-function playSound(src) {
-  const audio = new Audio(src);
-  audio.muted = soundMuted;
-  audio.play();
-  activeSounds.push(audio);
-
-  // Remove it from the list once it ends
-  audio.addEventListener("ended", () => {
-    const index = activeSounds.indexOf(audio);
-    if (index !== -1) activeSounds.splice(index, 1);
+document.getElementById("levelSelect").onclick = () => {
+  document.getElementById("bgm").play();
+  document.querySelectorAll(".ui").forEach(el => {
+    el.style.display = "none";
   });
-
-  return audio;
+  document.getElementById("levelMenu").style.display = "block";
 }
 
-document.getElementById("colourBlind").onclick = () => {
-  colourBlindMode = !colourBlindMode; // toggle on/off
-  toggleColourBlindMode(colourBlindMode);
-};
-
-function toggleColourBlindMode(enabled) {
-  // Handle ingredients
-  document.querySelectorAll(".ingredient").forEach(img => {
-    const base = img.dataset.base;
-    if (!base) return;
-    img.src = `Assets/Food Art/${enabled ? base.replace(".png", "_cb.png") : base}`;
+document.getElementById("menuLevelSelect").onclick = () => {
+  document.getElementById("bgm").play();
+  document.querySelectorAll(".ui").forEach(el => {
+    el.style.display = "none";
   });
+  document.getElementById("levelMenu").style.display = "block";
+  document.getElementById("tutorial1").style.display = "block";
 }
-
-document.querySelectorAll(".levelSelect").forEach(btn => {
-  btn.onclick = () => {
-    document.getElementById("bgm").play();
-    document.querySelectorAll(".ui").forEach(el => {
-      el.style.display = "none";
-    });
-    document.getElementById("levelMenu").style.display = "block";
-  }
-});
 
 document.querySelectorAll(".backToMain").forEach(btn => {
   btn.onclick = () => {
     document.querySelectorAll(".ui").forEach(el => {
       el.style.display = "none";
     });
-    document.getElementById("mainMenu").style.display = "block";
+    document.getElementById("mainMenu").style.display = "flex";
+    document.getElementById("highScore").style.display = "none";
+    requiredPoints = 300;
   }
 });
 
@@ -725,4 +958,84 @@ document.getElementById("endlessMode").onclick = () => {
   }
 
   startEndlessRound();
+  document.getElementById("tutorialEndless").style.display = "block";
 };
+
+/****************************************************
+ * Tutorial Setup
+ ****************************************************/
+
+function setupTutorial(tutorialId) {
+  const tutorial = document.getElementById(tutorialId);
+  if (!tutorial) return;
+
+  const nextBtn = tutorial.querySelector(".nextTutorial");
+  const closeBtn = tutorial.querySelector(".closeTutorial");
+  const steps = Array.from(tutorial.querySelectorAll("p, img"));
+  let currentStep = 0;
+
+  // Initialize state
+  steps.forEach((el, i) => el.style.display = i === 0 ? "block" : "none");
+  closeBtn.style.display = "block";
+
+  // Next button logic
+  nextBtn.addEventListener("click", () => {
+    steps[currentStep].style.display = "none";
+    currentStep++;
+
+    if (currentStep < steps.length) {
+      steps[currentStep].style.display = "block";
+    } else {
+      tutorial.style.display = "none";
+      currentStep = 0;
+      steps.forEach((el, i) => el.style.display = i === 0 ? "block" : "none");
+    }
+  });
+
+  // Close button logic
+  closeBtn.addEventListener("click", () => {
+    tutorial.style.display = "none";
+    currentStep = 0;
+    steps.forEach((el, i) => el.style.display = i === 0 ? "block" : "none");
+  });
+}
+
+// Initialize all tutorials on page load
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".tutorial").forEach(tut => setupTutorial(tut.id));
+});
+
+function exportAllStatsCSV() {
+  if (globalStats.sessions.length === 0) return;
+
+  // Prepare level-by-level data
+  let csv = "levelName,planningPercent,serveSpeedPercent,anticipationPercent,totalCustomersServed,totalCustomersSpawned,duration\n";
+  globalStats.sessions.forEach(s => {
+    csv += `${s.levelName},${s.planningPercent.toFixed(1)},${s.serveSpeedPercent.toFixed(1)},${s.anticipationPercent.toFixed(1)},${s.totalCustomersServed},${s.totalCustomersSpawned},${s.duration}\n`;
+  });
+
+  // Add overall averages (compute safely on the fly)
+  const levels = globalStats.totalLevelsPlayed || 0;
+
+  const avgPlanning =
+    levels ? globalStats.totalPlanning / levels : 0;
+  const avgServeSpeed =
+    levels ? globalStats.totalServeSpeed / levels : 0;
+  const avgAnticipation =
+    levels ? globalStats.totalAnticipation / levels : 0;
+
+  // If you prefer to keep cumulative totals too, they’re already in globalStats.* totals
+  csv += "\nAverages & Totals,";
+  csv += `${avgPlanning.toFixed(1)},${avgServeSpeed.toFixed(1)},${avgAnticipation.toFixed(1)},${globalStats.totalCustomersServed},${globalStats.totalCustomersSpawned},${(globalStats.totalDuration || 0).toFixed(1)}\n`;
+
+  // Download CSV
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `outback_cognitive_summary_${Date.now()}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+document.getElementById("statsDownload").addEventListener("click", exportAllStatsCSV);
