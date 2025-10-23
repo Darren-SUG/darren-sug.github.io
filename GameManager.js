@@ -7,7 +7,7 @@ const LEVEL_TIME = 60;         // seconds
 const POINTS_PER_MEAL = 100;
 let currentLevel = null;
 let currentScore = 0;
-let endlessHighScore = 0;
+let endlessHighScore = parseInt(localStorage.getItem("endlessHighScore")) || 0;
 let endlessWaveCount = 0;
 let levelTimer   = LEVEL_TIME;
 let requiredPoints = 300;
@@ -49,6 +49,21 @@ const globalStats = {
   totalCustomersSpawned: 0,
   totalDuration: 0,
 };
+
+// Load saved stats if same day, otherwise reset
+const savedStats = localStorage.getItem("outbackStats");
+const savedDate = localStorage.getItem("outbackStatsDate");
+const today = new Date().toDateString();
+
+if (savedStats && savedDate === today) {
+  //  Restore previous stats for today
+  const parsed = JSON.parse(savedStats);
+  Object.assign(globalStats, parsed);
+} else {
+  //  New day → reset stats
+  localStorage.removeItem("outbackStats");
+  localStorage.removeItem("outbackStatsDate");
+}
 
 // Track which plates have items (arrays allow up to 3 ingredients)
 const plateContents = {
@@ -630,6 +645,7 @@ function endLevel() {
       showCafeMenu(generateEndlessLevel());
     } else {
       endlessHighScore = Math.max(currentScore, endlessHighScore);
+      localStorage.setItem("endlessHighScore", endlessHighScore.toString());
       document.getElementById("highScore").textContent = "High Score: " + endlessHighScore;
       document.getElementById("highScore").style.display = "block";
       document.getElementById("levelComplete").style.display = "block";
@@ -708,6 +724,10 @@ function endLevel() {
     avgServeSpeed: globalStats.avgServeSpeed.toFixed(1),
     avgAnticipation: globalStats.avgAnticipation.toFixed(1),
   });
+
+  // Save updated stats and current date
+  localStorage.setItem("outbackStats", JSON.stringify(globalStats));
+  localStorage.setItem("outbackStatsDate", new Date().toDateString());
 }
 
 /****************************************************
@@ -765,8 +785,10 @@ const levelNames = ["level1", "level2", "level3", "level4", "level5"];
 function showCafeMenu(levelData) {
   const levelIndex = levels.indexOf(levelData);
   const tutorialId = levelTutorials[levelNames[levelIndex]];
-  if (tutorialId && document.getElementById(tutorialId)) {
+  
+  if (!localStorage.getItem(tutorialId) && tutorialId && document.getElementById(tutorialId)) {
     document.getElementById(tutorialId).style.display = "block";
+    localStorage.setItem(tutorialId, "true");
   }
   document.getElementById("levelComplete").style.display = "none";
   const menu = document.getElementById("cafeMenu");
@@ -848,7 +870,7 @@ function startLevel(levelData) {
       customers.push(animal);
       playSound("Assets/SFX/Ding.mp3");
 
-      // 🧠 Track unique animals
+      //  Track unique animals
       stats.totalCustomersSpawned++;
       stats.animalTypesSeen.add(randomCustomer.name);
     }
@@ -921,7 +943,10 @@ document.getElementById("menuLevelSelect").onclick = () => {
     el.style.display = "none";
   });
   document.getElementById("levelMenu").style.display = "block";
-  document.getElementById("tutorial1").style.display = "block";
+  if (!localStorage.getItem("tutorial1")) {
+    document.getElementById("tutorial1").style.display = "block";
+    localStorage.setItem("tutorial1", "true");
+  }
 }
 
 document.querySelectorAll(".backToMain").forEach(btn => {
@@ -958,7 +983,15 @@ document.getElementById("endlessMode").onclick = () => {
   }
 
   startEndlessRound();
-  document.getElementById("tutorialEndless").style.display = "block";
+  if (!localStorage.getItem("tutorialEndless")) {
+    document.getElementById("tutorialEndless").style.display = "block";
+    localStorage.setItem("tutorialEndless", "true");
+  }
+};
+
+document.getElementById("allTutorials").onclick = () => {
+  document.getElementById("combinedTutorials").style.display = "block";
+  document.getElementById("bgm").play();
 };
 
 /****************************************************
@@ -1006,7 +1039,10 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function exportAllStatsCSV() {
-  if (globalStats.sessions.length === 0) return;
+  if (globalStats.sessions.length === 0) {
+    alert("No statistics available to export.");
+    return;
+  }
 
   // Prepare level-by-level data
   let csv = "levelName,planningPercent,serveSpeedPercent,anticipationPercent,totalCustomersServed,totalCustomersSpawned,duration\n";
