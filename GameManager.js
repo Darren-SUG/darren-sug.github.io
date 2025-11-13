@@ -409,7 +409,8 @@ class Animal {
     currentScore -= 10;
     updateScore();
     clearInterval(this.timer);
-    playSound("Assets/SFX/AnimalAngry.mp3");
+    currentScore -= 10;
+    new Audio("Assets/SFX/AnimalAngry.mp3").play();
     const img = document.createElement("img");
     img.src = "Assets/Customer Art/angry.png";
     img.className = "reaction-icon";
